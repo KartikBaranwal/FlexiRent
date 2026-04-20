@@ -83,7 +83,7 @@ export default function DashboardPage() {
 
     setModalLoading(true);
     try {
-      const res = await fetch(`/api/orders/${selectedItem._id}/repair`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${selectedItem._id}/repair`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ repairNote: `${repairIssue}: ${repairDesc}` }),
@@ -113,7 +113,7 @@ export default function DashboardPage() {
     try {
       // newMonthlyRent: use the option's absolute rent (not addRent on top of already-swapped rent)
       const newMonthlyRent = selectedOption.rent;
-      const res = await fetch(`/api/orders/${selectedItem._id}/swap`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${selectedItem._id}/swap`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -158,7 +158,7 @@ export default function DashboardPage() {
     if (!selectedItem?._id) return;
     setModalLoading(true);
     try {
-      const res = await fetch(`/api/orders/${selectedItem._id}/relocate`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${selectedItem._id}/relocate`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ relocateAddress, relocateDate }),
@@ -227,8 +227,8 @@ export default function DashboardPage() {
     const fetchData = async () => {
       try {
         const [ordersRes, txnsRes] = await Promise.all([
-          fetch(`/api/orders/user/${user._id}`),
-          fetch(`/api/transactions/user/${user._id}`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/user/${user._id}`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/transactions/user/${user._id}`),
         ]);
 
         if (ordersRes.ok) {
@@ -257,7 +257,7 @@ export default function DashboardPage() {
 
   const cancelRequest = async (orderId: string, type: 'repair' | 'relocate' | 'swap') => {
     try {
-      const res = await fetch(`/api/orders/${orderId}/cancel-request`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${orderId}/cancel-request`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type }),
@@ -319,7 +319,7 @@ export default function DashboardPage() {
       }
 
       // 2. Create Razorpay order for the cancellation fee
-      const payRes = await fetch('/api/payment/create-order', {
+      const payRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payment/create-order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount: cancellationFee }),
@@ -338,7 +338,7 @@ export default function DashboardPage() {
         handler: async (response: any) => {
           try {
             // 4. Verify payment
-            const verifyRes = await fetch('/api/payment/verify', {
+            const verifyRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payment/verify`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -352,7 +352,7 @@ export default function DashboardPage() {
             if (!verifyRes.ok) throw new Error('Payment verification failed.');
 
             // 5. Payment verified → proceed with cancellation
-            const cancelRes = await fetch(`/api/orders/${orderId}/cancel-rental`, {
+            const cancelRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${orderId}/cancel-rental`, {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ userId: user._id }),
@@ -746,7 +746,7 @@ export default function DashboardPage() {
             if (payingId) return;
             setPayingId(txnId);
             try {
-              const res = await fetch(`/api/transactions/${txnId}/pay`, {
+              const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/transactions/${txnId}/pay`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
               });

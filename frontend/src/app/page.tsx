@@ -37,23 +37,29 @@ export default function Home() {
 
   useEffect(() => {
     setLoading(true);
-    fetch('/api/products')
-      .then(res => res.json())
+    const baseUrl = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/, '');
+    
+    fetch(`${baseUrl}/api/products`)
+      .then(res => {
+        if (!res.headers.get("content-type")?.includes("application/json")) throw new Error("Invalid response type");
+        return res.json();
+      })
       .then(data => {
         const products = Array.isArray(data) ? data : [];
-        setDbProducts(products.slice(0, 8)); // Show more real products
+        setDbProducts(products.slice(0, 8));
       })
       .catch(err => {
         console.error("Home products fetch failed", err);
         setDbProducts([]);
-      })
-      .finally(() => setLoading(false));
+      });
 
-    fetch('/api/bundles')
-      .then(res => res.json())
+    fetch(`${baseUrl}/api/bundles`)
+      .then(res => {
+        if (!res.headers.get("content-type")?.includes("application/json")) throw new Error("Invalid response type");
+        return res.json();
+      })
       .then(data => {
         const bundles = Array.isArray(data) ? data : [];
-        // Sort so 1BHK appears first
         bundles.sort((a: any, b: any) => {
           const aIs1BHK = a.name?.toLowerCase().includes('1bhk') ? -1 : 0;
           const bIs1BHK = b.name?.toLowerCase().includes('1bhk') ? -1 : 0;
@@ -61,7 +67,10 @@ export default function Home() {
         });
         setDbBundles(bundles);
       })
-      .catch(err => setDbBundles([]));
+      .catch(err => {
+        console.error("Home bundles fetch failed", err);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const handleGenerate = async (overridePrompt?: string) => {
@@ -145,7 +154,7 @@ export default function Home() {
     }
 
     try {
-      const res = await fetch('/api/ai/generate-bundle', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/ai/generate-bundle`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ requirements: activePrompt })

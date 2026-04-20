@@ -37,7 +37,7 @@ export default function AdminRentals() {
 
   const fetchRentals = async () => {
     try {
-      const res = await fetch('/api/admin/rentals', { headers });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/rentals`, { headers });
       if (!res.ok) throw new Error('Failed to load rentals');
       setRentals(await res.json());
     } catch (err: any) {
@@ -52,7 +52,7 @@ export default function AdminRentals() {
   const handleStatusChange = async (id: string, status: string) => {
     setUpdatingId(id);
     try {
-      const res = await fetch(`/api/admin/rentals/${id}/status`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/rentals/${id}/status`, {
         method: 'PATCH',
         headers,
         body: JSON.stringify({ status }),

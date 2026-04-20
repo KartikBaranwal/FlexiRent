@@ -69,7 +69,7 @@ export default function CartPage() {
       console.log(`Frontend initiating payment for initial charge: ₹${totalAmount} (Deposit + 1st month)`);
       
       // 1. Create Razorpay Order in Backend
-      const res = await fetch("/api/payment/create-order", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payment/create-order`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ amount: totalAmount })
@@ -98,7 +98,7 @@ export default function CartPage() {
         handler: async function (response: any) {
           // 3. Verify Payment and Record in DB
           try {
-            const verifyRes = await fetch('/api/payment/verify', {
+            const verifyRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payment/verify`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -113,7 +113,7 @@ export default function CartPage() {
             if (!verifyRes.ok) throw new Error("Payment verification failed");
 
             // 4. Save Final Order to DB
-            const orderRes = await fetch('/api/orders', {
+            const orderRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({

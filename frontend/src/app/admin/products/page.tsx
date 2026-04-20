@@ -47,7 +47,7 @@ export default function AdminProducts() {
 
   const fetchProducts = async () => {
     try {
-      const res = await fetch('/api/admin/products', { headers });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products`, { headers });
       if (!res.ok) throw new Error('Failed to load products');
       setProducts(await res.json());
     } catch (err: any) {
@@ -96,7 +96,7 @@ export default function AdminProducts() {
         imageUrl: form.imageUrl,
         stock: Number(form.stock) || 10,
       };
-      const url = editProduct ? `/api/admin/products/${editProduct._id}` : '/api/admin/products';
+      const url = editProduct ? `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${editProduct._id}` : `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products`;
       const method = editProduct ? 'PUT' : 'POST';
       const res = await fetch(url, { method, headers, body: JSON.stringify(body) });
       if (!res.ok) throw new Error('Save failed');
@@ -117,7 +117,7 @@ export default function AdminProducts() {
   const handleDelete = async (id: string) => {
     setDeletingId(id);
     try {
-      const res = await fetch(`/api/admin/products/${id}`, { method: 'DELETE', headers });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${id}`, { method: 'DELETE', headers });
       if (!res.ok) throw new Error('Delete failed');
       setProducts((prev) => prev.filter((p) => p._id !== id));
       setConfirmId(null);

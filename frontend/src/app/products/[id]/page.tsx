@@ -26,7 +26,7 @@ export default function ProductDetailPage() {
         const isMockId = typeof params.id === 'string' && params.id.startsWith('m');
         if (isMockId) {
           try {
-            const res = await fetch(`/api/products/${params.id}`);
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products/${params.id}`);
             const data = await res.json();
             if (res.ok && data._id) {
               setProduct(data);
@@ -38,12 +38,12 @@ export default function ProductDetailPage() {
 
         try {
           // Attempt product fetch natively
-          let res = await fetch(`/api/products/${params.id}`);
+          let res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products/${params.id}`);
           let data = await res.json();
 
           if (!res.ok || data.message === 'Product not found' || !data._id) {
             // Fallback attempt bundle fetch
-            res = await fetch(`/api/bundles/${params.id}`);
+            res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/bundles/${params.id}`);
             data = await res.json();
             if (!res.ok || data.message === 'Bundle not found' || !data._id) {
               setProduct({ error: "Item not found in database" });

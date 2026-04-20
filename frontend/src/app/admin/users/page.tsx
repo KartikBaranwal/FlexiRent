@@ -24,7 +24,7 @@ export default function AdminUsers() {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch('/api/admin/users', { headers });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users`, { headers });
       if (!res.ok) throw new Error('Failed to load users');
       setUsers(await res.json());
     } catch (err: any) {
@@ -39,7 +39,7 @@ export default function AdminUsers() {
   const handleDelete = async (id: string) => {
     setDeletingId(id);
     try {
-      const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE', headers });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/${id}`, { method: 'DELETE', headers });
       if (!res.ok) throw new Error('Delete failed');
       setUsers((prev) => prev.filter((u) => u._id !== id));
       setConfirmId(null);

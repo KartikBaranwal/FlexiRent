@@ -94,12 +94,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (!user) return;
     const fetchUserData = async () => {
       try {
+        const baseUrl = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/, '');
         const [cartRes, favRes] = await Promise.all([
-          fetch(`/api/cart/${user._id}`),
-          fetch(`/api/wishlist/${user._id}`)
+          fetch(`${baseUrl}/api/cart/${user._id}`),
+          fetch(`${baseUrl}/api/wishlist/${user._id}`)
         ]);
         
-        if (cartRes.ok) {
+        if (cartRes.ok && cartRes.headers.get("content-type")?.includes("application/json")) {
           const dbCartData = await cartRes.json();
           if (dbCartData.items && dbCartData.items.length > 0) {
             const dbCart = dbCartData.items.map((item: any) => {
@@ -146,7 +147,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     if (user) {
       try {
-        await fetch('/api/cart/add', {
+        const baseUrl = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/, '');
+        await fetch(`${baseUrl}/api/cart/add`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: user._id, productId: product._id, quantity: 1 })
@@ -161,7 +163,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setCart((prev) => prev.filter((p) => p._id !== productId));
     if (user) {
       try {
-        await fetch('/api/cart/remove', {
+        const baseUrl = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/, '');
+        await fetch(`${baseUrl}/api/cart/remove`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: user._id, productId })
@@ -181,7 +184,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setCart([]);
     if (user) {
       try {
-        await fetch(`/api/cart/clear/${user._id}`, { method: 'DELETE' });
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/cart/clear/${user._id}`, { method: 'DELETE' });
       } catch(e) {
         console.error("Cart clear failed", e);
       }
@@ -203,8 +206,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     if (user) {
       try {
+        const baseUrl = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/, '');
         const endpoint = wasAdded ? 'add' : 'remove';
-        await fetch(`/api/wishlist/${endpoint}`, {
+        await fetch(`${baseUrl}/api/wishlist/${endpoint}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: user._id, productId: product._id })

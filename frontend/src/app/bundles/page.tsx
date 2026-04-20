@@ -20,7 +20,7 @@ export default function BundlesPage() {
   const router = useRouter();
 
   React.useEffect(() => {
-    fetch('/api/bundles')
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/bundles`)
       .then(res => res.json())
       .then(data => {
         setDbBundles(Array.isArray(data) ? data : []);

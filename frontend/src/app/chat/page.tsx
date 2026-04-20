@@ -13,7 +13,7 @@ export default function ChatPage() {
         setMessages((prev) => [...prev, "You: " + input]);
 
         try {
-            const res = await fetch("/api/ai/chat", {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/ai/chat`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"

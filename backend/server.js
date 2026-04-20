@@ -1,4 +1,4 @@
-// require('dotenv').config();
+require('dotenv').config();
 // Direct DNS override for stable connectivity on Windows
 require('dns').setServers(['8.8.8.8']);
 
@@ -52,5 +52,5 @@ app.use(notFound);
 app.use(errorHandler);
 
 app.listen(PORT, () => {
-    console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
 });

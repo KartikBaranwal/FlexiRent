@@ -1,7 +1,7 @@
 const Product = require('../models/Product');
 
 // @desc    Fetch all products
-// @route   GET /api/products
+// @route   GET fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products`)
 // @access  Public
 const getProducts = async (req, res, next) => {
   try {
@@ -18,7 +18,7 @@ const getProducts = async (req, res, next) => {
 };
 
 // @desc    Fetch single product
-// @route   GET /api/products/:id
+// @route   GET fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products`)/:id
 // @access  Public
 const getProductById = async (req, res, next) => {
   try {
@@ -35,7 +35,7 @@ const getProductById = async (req, res, next) => {
 };
 
 // @desc    Update a product
-// @route   PUT /api/products/:id
+// @route   PUT fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products`)/:id
 // @access  Public (Admin in production)
 const updateProduct = async (req, res, next) => {
   try {

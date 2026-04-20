@@ -34,7 +34,7 @@ export default function AdminDashboard() {
     if (!user?.token) return;
     const fetchStats = async () => {
       try {
-        const res = await fetch('/api/admin/stats', {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/stats`, {
           headers: { Authorization: `Bearer ${user.token}` },
         });
         if (!res.ok) throw new Error('Failed to fetch stats');

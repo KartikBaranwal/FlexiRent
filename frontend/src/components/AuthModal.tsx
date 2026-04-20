@@ -48,7 +48,8 @@ export const AuthModal = () => {
     }
 
     try {
-      const endpoint = authModalMode === 'signup' ? '/api/auth/register' : '/api/auth/login';
+      const baseUrl = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/, '');
+      const endpoint = authModalMode === 'signup' ? `${baseUrl}/api/auth/register` : `${baseUrl}/api/auth/login`;
       const body: any = authModalMode === 'signup' ? { name, email, password, city, addressLine1, addressLine2, pincode } : { email, password };
 
       const res = await fetch(`${endpoint}`, {
@@ -56,6 +57,14 @@ export const AuthModal = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
+
+      // Robust check for JSON contentType
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await res.text();
+        console.error("Non-JSON response received:", text);
+        throw new Error(`Server returned an invalid response (HTML). Please check if the backend URL (${baseUrl}) is correct and active.`);
+      }
 
       const data = await res.json();
 
