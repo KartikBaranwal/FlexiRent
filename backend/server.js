@@ -1,4 +1,4 @@
-require('dotenv').config();
+// require('dotenv').config();
 // Direct DNS override for stable connectivity on Windows
 require('dns').setServers(['8.8.8.8']);
 
