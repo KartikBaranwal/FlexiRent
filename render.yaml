@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: flexirent-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: MONGO_URI
+        value: mongodb+srv://kartikbaranwal:54321@smartrental.c0c98gd.mongodb.net/?appName=SmartRental
+      - key: JWT_SECRET
+        value: your_super_secret_key
