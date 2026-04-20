@@ -22,20 +22,6 @@ export default function ProductDetailPage() {
   useEffect(() => {
     if (params.id) {
       const fetchItem = async () => {
-        // Direct mock ID handling to avoid fetch errors for static assets
-        const isMockId = typeof params.id === 'string' && params.id.startsWith('m');
-        if (isMockId) {
-          try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products/${params.id}`);
-            const data = await res.json();
-            if (res.ok && data._id) {
-              setProduct(data);
-              setActiveImage(data.imageUrl || data.image);
-              return;
-            }
-          } catch (e) { }
-        }
-
         try {
           // Attempt product fetch natively
           let res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products/${params.id}`);

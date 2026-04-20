@@ -1,5 +1,7 @@
 "use client";
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { toast } from 'react-hot-toast';
+import api from '@/lib/api';
 
 interface User {
   _id: string;
@@ -35,10 +37,9 @@ interface AppContextType {
   setAuthModalOpen: (isOpen: boolean) => void;
   authModalMode: 'login' | 'signup';
   setAuthModalMode: (mode: 'login' | 'signup') => void;
-  toastMessage: string | null;
-  showToast: (msg: string) => void;
   wishlist: Product[];
   toggleWishlist: (product: Product) => void;
+  showToast: (msg: string) => void;
   aiPrompt: string;
   setAiPrompt: (prompt: string) => void;
   aiBundle: any | null;
@@ -53,16 +54,20 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [cart, setCart] = useState<Product[]>([]);
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'signup'>('login');
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [wishlist, setWishlist] = useState<Product[]>([]);
-
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
-  };
-
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiBundle, setAiBundle] = useState<any | null>(null);
+
+  const showToast = (msg: string) => {
+    const lowerMsg = msg.toLowerCase();
+    if (lowerMsg.includes('success') || lowerMsg.includes('✨') || lowerMsg.includes('welcome') || lowerMsg.includes('added')) {
+      toast.success(msg);
+    } else if (lowerMsg.includes('fail') || lowerMsg.includes('error') || lowerMsg.includes('invalid')) {
+      toast.error(msg);
+    } else {
+      toast(msg);
+    }
+  };
 
   // Load state from localStorage on init
   useEffect(() => {
@@ -75,7 +80,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       if (storedWishlist && storedWishlist !== 'undefined') setWishlist(JSON.parse(storedWishlist));
     } catch (error) {
       console.warn("Failed to parse local storage data:", error);
-      // Clear potentially corrupted data
       localStorage.removeItem('user');
       localStorage.removeItem('smart_rental_cart');
       localStorage.removeItem('smart_rental_wishlist');
@@ -86,38 +90,36 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   // Save changes to localStorage
   useEffect(() => {
-    localStorage.setItem('user', JSON.stringify(user));
-  }, [user]);
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+    } else if (isHydrated) {
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+    }
+  }, [user, isHydrated]);
 
   // DB Sync on login
   useEffect(() => {
     if (!user) return;
     const fetchUserData = async () => {
       try {
-        const baseUrl = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/, '');
         const [cartRes, favRes] = await Promise.all([
-          fetch(`${baseUrl}/api/cart/${user._id}`),
-          fetch(`${baseUrl}/api/wishlist/${user._id}`)
+          api.get(`/api/cart/${user._id}`),
+          api.get(`/api/wishlist/${user._id}`)
         ]);
         
-        if (cartRes.ok && cartRes.headers.get("content-type")?.includes("application/json")) {
-          const dbCartData = await cartRes.json();
-          if (dbCartData.items && dbCartData.items.length > 0) {
-            const dbCart = dbCartData.items.map((item: any) => {
-              if(item.productId) {
-                 return { ...item.productId, quantity: item.quantity };
-              }
-              return null;
-            }).filter(Boolean);
-            setCart(dbCart);
-          }
+        if (cartRes.data?.items) {
+          const dbCart = cartRes.data.items.map((item: any) => {
+            if(item.productId) {
+               return { ...item.productId, quantity: item.quantity };
+            }
+            return null;
+          }).filter(Boolean);
+          setCart(dbCart);
         }
         
-        if (favRes.ok) {
-           const dbFavData = await favRes.json();
-           if(dbFavData.products) {
-              setWishlist(dbFavData.products);
-           }
+        if (favRes.data?.products) {
+          setWishlist(favRes.data.products);
         }
       } catch (err) {
         console.error("Failed to sync user data", err);
@@ -142,17 +144,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
     const newCart = [...cart, { ...product, quantity: 1 }];
     setCart(newCart);
-    localStorage.setItem('smart_rental_cart', JSON.stringify(newCart));
-    showToast('Cart Updated');
+    showToast('✨ Added to cart successfully');
 
     if (user) {
       try {
-        const baseUrl = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/, '');
-        await fetch(`${baseUrl}/api/cart/add`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: user._id, productId: product._id, quantity: 1 })
-        });
+        await api.post('/api/cart/add', { userId: user._id, productId: product._id, quantity: 1 });
       } catch(e) {
         console.error("Cart update failed", e);
       }
@@ -163,12 +159,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setCart((prev) => prev.filter((p) => p._id !== productId));
     if (user) {
       try {
-        const baseUrl = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/, '');
-        await fetch(`${baseUrl}/api/cart/remove`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: user._id, productId })
-        });
+        await api.post('/api/cart/remove', { userId: user._id, productId });
       } catch(e) {
         console.error("Cart removal failed", e);
       }
@@ -184,7 +175,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setCart([]);
     if (user) {
       try {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/cart/clear/${user._id}`, { method: 'DELETE' });
+        await api.delete(`/api/cart/clear/${user._id}`);
       } catch(e) {
         console.error("Cart clear failed", e);
       }
@@ -200,19 +191,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         return prev.filter((p) => p._id !== product._id);
       }
       wasAdded = true;
-      showToast("Added to wishlist");
+      showToast("❤️ Added to wishlist");
       return [...prev, product];
     });
 
     if (user) {
       try {
-        const baseUrl = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/, '');
         const endpoint = wasAdded ? 'add' : 'remove';
-        await fetch(`${baseUrl}/api/wishlist/${endpoint}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: user._id, productId: product._id })
-        });
+        await api.post(`/api/wishlist/${endpoint}`, { userId: user._id, productId: product._id });
       } catch(e) {
         console.error("Wishlist sync failed", e);
       }
@@ -225,28 +211,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       cart, addToCart, removeFromCart, updateQuantity, clearCart,
       isAuthModalOpen, setAuthModalOpen,
       authModalMode, setAuthModalMode,
-      toastMessage, showToast,
       wishlist, toggleWishlist,
+      showToast,
       aiPrompt, setAiPrompt,
       aiBundle, setAiBundle
     }}>
       {children}
-      {/* Global Production Toast */}
-      {toastMessage && (
-        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[150] animate-in slide-in-from-bottom-8 fade-in duration-300 pointer-events-none">
-          <div className="bg-slate-900/95 backdrop-blur-md text-white px-6 py-4 rounded-full border border-slate-700/50 flex items-center gap-3.5 shadow-[0_15px_40px_-5px_rgba(0,0,0,0.3)]">
-            <div className="text-base">
-              {toastMessage.includes('Welcome back') ? '✨' : 
-               toastMessage.toLowerCase().includes('wishlist') ? '❤️' : 
-               toastMessage.toLowerCase().includes('review') || toastMessage.toLowerCase().includes('feedback') || toastMessage.includes('request sent') ? '🙏' : 
-               toastMessage.toLowerCase().includes('cart') ? '🛒' : '🔔'}
-            </div>
-            <p className="text-[15px] font-semibold tracking-wide m-0 whitespace-nowrap">
-              {toastMessage}
-            </p>
-          </div>
-        </div>
-      )}
     </AppContext.Provider>
   );
 };
