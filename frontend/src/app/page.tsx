@@ -12,8 +12,6 @@ import { ProductCard, ProductCardSkeleton } from '@/components/ProductCard';
 import { useAppContext } from '@/context/AppContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { Search, Sparkles, Wand2, ArrowRight, ShieldCheck, Truck, RefreshCcw, Star, PackageSearch, AlertCircle } from 'lucide-react';
-import api from '@/lib/api';
 
 const HeroCarousel = dynamic(() => import('@/components/HeroCarousel'), { ssr: false });
 
@@ -81,24 +79,28 @@ export default function Home() {
 
     setIsGenerating(true);
     setBundle(null);
+    const lowerReq = activePrompt.toLowerCase();
 
     try {
-      const res = await api.post('/api/ai/generate-bundle', { requirements: activePrompt });
-      const data = res.data;
-      
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/ai/generate-bundle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requirements: activePrompt })
+      });
+      if (!res.ok) throw new Error("AI generation failed");
+      const data = await res.json();
       setBundle(data);
-      
-      if (data && data.items && data.items.length > 0) {
+    } catch (err) {
+      console.error(err);
+      showToast("Sorry, our AI architect is temporarily offline. Please try again later.");
+      setBundle(null);
+    } finally {
+      setIsGenerating(false);
+      if (bundle) {
         setTimeout(() => {
           document.getElementById('generated-bundle')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }, 100);
       }
-    } catch (err) {
-      console.error(err);
-      showToast("Our AI Architect is refining its blueprints. Please try again in 15 seconds.");
-      setBundle(null);
-    } finally {
-      setIsGenerating(false);
     }
   };
 
@@ -152,9 +154,9 @@ export default function Home() {
   const filteredProducts = dbProducts.filter(p => !p.name.toLowerCase().includes('shoe rack'));
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+    <div className="flex flex-col min-h-screen bg-slate-50">
       {/* Split Hero Section */}
-      <section className="pt-32 pb-16 bg-slate-50 dark:bg-slate-950 relative overflow-hidden">
+      <section className="pt-32 pb-16 bg-slate-50 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 items-center">
 
@@ -214,26 +216,26 @@ export default function Home() {
               <div className="flex flex-col sm:flex-row gap-4 w-full px-4 sm:px-0 mt-2">
                 <a
                   href="/products?category=Appliances"
-                  className="flex-1 group flex items-center justify-center gap-4 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 hover:border-slate-900 dark:hover:border-white rounded-[2rem] py-4 px-6 transition-all duration-300 hover:shadow-lg active:scale-[0.98] shadow-md"
+                  className="flex-1 group flex items-center justify-center gap-4 bg-white hover:bg-slate-50 border border-slate-200 hover:border-black rounded-[2rem] py-4 px-6 transition-all duration-300 hover:shadow-lg active:scale-[0.98] shadow-md"
                 >
-                  <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0 border border-slate-100 dark:border-slate-600 group-hover:border-slate-200 dark:group-hover:border-slate-500 transition-colors shadow-sm">
+                  <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0 border border-slate-100 group-hover:border-slate-200 transition-colors shadow-sm">
                     <img src="https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=200" className="w-full h-full object-cover" alt="Appliances" />
                   </div>
                   <div className="flex flex-col items-start translate-y-0.5">
-                    <h3 className="text-sm font-black text-slate-900 dark:text-white leading-tight whitespace-nowrap tracking-tight uppercase group-hover:text-indigo-600 transition-colors">Explore Appliances</h3>
-                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-widest text-left">TVs, ACs and More</p>
+                    <h3 className="text-sm font-black text-slate-900 leading-tight whitespace-nowrap tracking-tight uppercase group-hover:text-indigo-600 transition-colors">Explore Appliances</h3>
+                    <p className="text-[10px] font-bold text-slate-400 tracking-widest text-left">TVs, ACs and More</p>
                   </div>
                 </a>
                 <a
                   href="/products?category=Furniture"
-                  className="flex-1 group flex items-center justify-center gap-4 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 hover:border-slate-900 dark:hover:border-white rounded-[2rem] py-4 px-6 transition-all duration-300 hover:shadow-lg active:scale-[0.98] shadow-md"
+                  className="flex-1 group flex items-center justify-center gap-4 bg-white hover:bg-slate-50 border border-slate-200 hover:border-black rounded-[2rem] py-4 px-6 transition-all duration-300 hover:shadow-lg active:scale-[0.98] shadow-md"
                 >
-                  <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0 border border-slate-100 dark:border-slate-600 group-hover:border-slate-200 dark:group-hover:border-slate-500 transition-colors shadow-sm">
+                  <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0 border border-slate-100 group-hover:border-slate-200 transition-colors shadow-sm">
                     <img src="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=200" className="w-full h-full object-cover" alt="Furniture" />
                   </div>
                   <div className="flex flex-col items-start translate-y-0.5">
-                    <h3 className="text-sm font-black text-slate-900 dark:text-white leading-tight whitespace-nowrap tracking-tight uppercase group-hover:text-indigo-600 transition-colors">Explore Furniture</h3>
-                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-widest text-left">Beds, Sofas and More</p>
+                    <h3 className="text-sm font-black text-slate-900 leading-tight whitespace-nowrap tracking-tight uppercase group-hover:text-indigo-600 transition-colors">Explore Furniture</h3>
+                    <p className="text-[10px] font-bold text-slate-400 tracking-widest text-left">Beds, Sofas and More</p>
                   </div>
                 </a>
               </div>
@@ -242,7 +244,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="pt-16 pb-12 bg-slate-50 dark:bg-slate-950 relative z-10 transition-colors">
+      <section className="pt-16 pb-12 bg-slate-50 relative z-10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-12">
           {(!dbBundles || dbBundles.length === 0) && !loading && (
             <div className="text-center text-slate-500 py-10 font-medium">No curated bundles found.</div>
@@ -256,7 +258,7 @@ export default function Home() {
             const fallbackImage = dbBundle.items?.[0]?.imageUrl || 'https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?w=800&auto=format&fit=crop';
 
             return (
-              <div key={dbBundle._id} className="relative mx-auto w-full animate-slide-up bg-white dark:bg-slate-900 p-8 sm:p-10 rounded-[3rem] premium-shadow border border-slate-100 dark:border-slate-800 transition-all duration-500 flex flex-col md:flex-row gap-10 items-center hover:scale-[1.01]">
+              <div key={dbBundle._id} className="relative mx-auto w-full animate-slide-up bg-white p-8 sm:p-10 rounded-[3rem] premium-shadow border border-slate-100/50 transition-transform duration-500 flex flex-col md:flex-row gap-10 items-center hover:scale-[1.01]">
 
                 {(dbBundle.tag || index === 0) && (
                   <div className="absolute -top-5 -left-5 bg-slate-900 text-white text-sm font-black px-6 py-3 rounded-full shadow-lg transform -rotate-6 z-10 flex items-center gap-2">
@@ -276,11 +278,11 @@ export default function Home() {
                     <span className="text-slate-900">{dbBundle.name}</span>
                   </h3>
                   <div className="mb-8">
-                    <button onClick={() => setShowComboItems(showComboItems === dbBundle._id ? null : dbBundle._id)} className="text-slate-600 dark:text-slate-300 font-bold text-sm bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-between w-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                    <button onClick={() => setShowComboItems(showComboItems === dbBundle._id ? null : dbBundle._id)} className="text-slate-600 font-bold text-sm bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 flex items-center justify-between w-full hover:bg-slate-200 transition-colors">
                       <span>View Included Items ({dbBundle.items?.length || 0})</span>
                       <span className={`transform transition-transform duration-300 ${showComboItems === dbBundle._id ? 'rotate-180' : 'rotate-0'}`}>▼</span>
                     </button>
-                    <div className={`grid grid-cols-2 gap-2 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-inner overflow-hidden transition-all duration-300 origin-top ${showComboItems === dbBundle._id ? 'max-h-64 mt-2 opacity-100 scale-100' : 'max-h-0 mt-0 opacity-0 scale-95 border-none p-0'}`}>
+                    <div className={`grid grid-cols-2 gap-2 p-3 bg-white rounded-xl border border-slate-100 shadow-inner overflow-hidden transition-all duration-300 origin-top ${showComboItems === dbBundle._id ? 'max-h-64 mt-2 opacity-100 scale-100' : 'max-h-0 mt-0 opacity-0 scale-95 border-none p-0'}`}>
                       {dbBundle.items?.map((item: any, i: number) => {
                         let emoji = '✨';
                         const itemName = item.name || item;
@@ -296,7 +298,7 @@ export default function Home() {
                         else if (lowerName.includes('microwave') || lowerName.includes('oven')) emoji = '♨️';
 
                         return (
-                          <div key={item._id || i} className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+                          <div key={item._id || i} className="flex items-center gap-2 text-sm text-slate-700 font-medium whitespace-nowrap overflow-hidden text-ellipsis">
                             <span className="text-lg flex-shrink-0">{emoji}</span> <span className="truncate">{itemName}</span>
                           </div>
                         );
@@ -304,10 +306,10 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <div className="flex items-end justify-between mb-8 pb-6 border-b border-slate-200 dark:border-slate-800">
+                  <div className="flex items-end justify-between mb-8 pb-6 border-b border-slate-200">
                     <div>
                       {savings > 0 && <span className="block text-sm text-slate-400 font-bold line-through mb-1">₹{originalRent.toLocaleString()}/mo</span>}
-                      <span className="block text-4xl font-black text-slate-900 dark:text-white leading-none">₹{price.toLocaleString()}<span className="text-base text-slate-500 font-bold">/mo</span></span>
+                      <span className="block text-4xl font-black text-slate-900 leading-none">₹{price.toLocaleString()}<span className="text-base text-slate-500 font-bold">/mo</span></span>
                     </div>
                     {savings > 0 && (
                       <div className="text-right">
@@ -332,11 +334,11 @@ export default function Home() {
       </section>
 
       {/* Why FlexiRent Modern Grid */}
-      <section className="py-24 bg-slate-900 text-white relative z-10 overflow-hidden">
+      <section className="py-12 bg-slate-900 text-white relative z-10 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-black mb-4 tracking-tight">The Modern Living Standard</h2>
-            <p className="text-slate-400 font-medium text-lg">Experience the stress-free alternative to traditional ownership.</p>
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-black mb-4 tracking-tight">Why Choose FlexiRent?</h2>
+            <p className="text-slate-400 font-medium text-lg">Experience the modern, stress-free alternative to buying furniture.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -360,12 +362,12 @@ export default function Home() {
       </section>
 
       {/* Recommended Section (Dynamically Filtered) */}
-      <section className="py-24 bg-slate-50 dark:bg-slate-950 transition-colors">
+      <section className="py-12 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
             <div>
-              <h2 className="text-4xl font-black text-slate-900 dark:text-white mb-4 tracking-tight" id="trending">Selection of the Month</h2>
-              <p className="text-slate-500 font-medium">Curated furniture and appliances ready for instant delivery.</p>
+              <h2 className="text-3xl font-bold text-slate-900 mb-4" id="trending">Trending Items</h2>
+              <p className="text-slate-600">Premium furniture and appliances ready for delivery.</p>
             </div>
           </div>
 
@@ -375,10 +377,10 @@ export default function Home() {
                 <ProductCardSkeleton key={i} />
               ))
             ) : filteredProducts.length === 0 ? (
-              <div className="col-span-full py-24 text-center bg-white dark:bg-slate-900 rounded-[3rem] border border-slate-100 dark:border-slate-800 border-dashed">
-                <div className="text-4xl mb-6 opacity-30">🔍</div>
-                <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">No items discovered yet</h3>
-                <p className="text-slate-500 font-medium">Our inventory is being updated. Check back in a few minutes.</p>
+              <div className="col-span-full py-20 text-center bg-white rounded-[2rem] border border-slate-100 border-dashed">
+                <div className="text-4xl mb-4">🔍</div>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">No products found</h3>
+                <p className="text-slate-500">We couldn't find any trending items right now.</p>
               </div>
             ) : (
               filteredProducts.slice(0, visibleCount).map(product => (
@@ -390,184 +392,131 @@ export default function Home() {
       </section>
 
       {/* Inline AI Generator */}
-      <section id="ai-generator" className="py-24 bg-white dark:bg-slate-900/50 relative z-10 px-6 transition-colors">
-        <div className="max-w-7xl mx-auto mb-16 text-center">
-          <div className="inline-flex items-center gap-2 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 px-4 py-2 rounded-full text-[11px] font-black uppercase tracking-widest mb-6 border border-indigo-100 dark:border-indigo-500/20">
-            <Sparkles className="w-4 h-4" />
-            <span>AI Interior Architect</span>
-          </div>
-          <h2 className="text-5xl font-black text-slate-900 dark:text-white mb-6 tracking-tight">Curate Your <span className="text-slate-400 dark:text-slate-500">Perfect Setup.</span></h2>
-          <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto text-lg font-medium leading-relaxed">
-            Describe your ideal living space or budget constraints. Our Architect will cross-reference thousands of combinations to build your custom package in seconds.
-          </p>
+      <section id="ai-generator" className="py-12 bg-slate-50 relative z-10 px-4 pt-12">
+        <div className="max-w-7xl mx-auto mb-8 text-center">
+          <h2 className="text-3xl font-bold text-slate-900 mb-4 tracking-tight">Design Your Ideal Space with AI</h2>
+          <p className="text-slate-600 max-w-2xl mx-auto text-lg">Don't see a combo that perfectly fits your home? Tell our AI architect what you're looking for, and it will instantly construct a personalized rental bundle just for you.</p>
         </div>
-        
-        <div className="max-w-4xl mx-auto bg-slate-50 dark:bg-slate-900/80 rounded-[4rem] p-8 sm:p-12 border border-slate-100 dark:border-slate-800 relative overflow-hidden group shadow-[0_20px_50px_-20px_rgba(0,0,0,0.05)]">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-100/50 dark:bg-indigo-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-          
-          <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-10 flex items-center gap-4">
-            <div className="bg-slate-900 dark:bg-white w-12 h-12 flex items-center justify-center rounded-2xl text-white dark:text-slate-900 shadow-xl">
-              <Wand2 className="w-6 h-6" />
-            </div>
-            Describe your requirements
+        <div className="max-w-4xl mx-auto bg-white rounded-[3rem] p-6 sm:p-12 premium-shadow border border-slate-100 transform hover:-translate-y-1 transition-all duration-500">
+          <h2 className="text-2xl font-black text-slate-900 mb-8 flex items-center gap-4">
+            <span className="bg-slate-950 w-12 h-12 flex items-center justify-center rounded-2xl text-white text-xl shadow-lg border border-slate-800">✨</span>
+            Describe your ideal space
           </h2>
-          
-          <div className="relative z-10">
+          <div className="relative">
             <textarea
               value={aiPrompt}
               onChange={(e) => setAiPrompt(e.target.value)}
-              placeholder="e.g. A premium Work-from-Home setup under ₹2,000 including a high-end monitor and ergonomic chair..."
-              className="w-full h-44 p-8 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] resize-none focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600/50 text-xl text-slate-900 dark:text-white transition-all placeholder:text-slate-300 dark:placeholder:text-slate-700 shadow-sm"
+              placeholder="e.g. A cozy bedroom setup under ₹1500 with a study desk, chair, and a wardrobe..."
+              className="w-full h-36 p-6 bg-slate-50 border border-slate-200 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white text-lg text-slate-900 transition-all placeholder:text-slate-400"
             />
             <Button
               disabled={!mounted || isGenerating || !aiPrompt.trim()}
               onClick={() => handleGenerate()}
-              className="absolute bottom-6 right-6 px-10 py-5 rounded-[1.5rem] text-lg font-black bg-slate-950 dark:bg-white text-white dark:text-slate-900 hover:opacity-90 transition-opacity"
+              className={`absolute bottom-6 right-6 rounded-2xl px-10 py-5 font-black transition-all shadow-xl text-lg border-0 ${(!mounted || isGenerating || !aiPrompt.trim()) ? 'bg-zinc-100 text-zinc-400 cursor-not-allowed shadow-none' : 'bg-slate-950 hover:bg-slate-800 text-white active:scale-95'}`}
             >
-              {isGenerating ? 'Architecting...' : 'Build Custom Bundle \u2192'}
+              {isGenerating ? 'Architecting...' : 'Build Selection \u2192'}
             </Button>
           </div>
 
-          <div className="mt-8 flex flex-wrap gap-3 items-center">
-            <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest mr-2">Quick Blueprints:</span>
-            <button onClick={() => setAiPrompt('Complete Work From Home setup under ₹1500')} className="text-[13px] bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-4 py-2.5 rounded-xl hover:bg-slate-900 dark:hover:bg-white hover:text-white dark:hover:text-slate-900 transition-all font-bold border border-slate-200/50 dark:border-slate-700 shadow-sm">💻 WFH under ₹1500</button>
-            <button onClick={() => setAiPrompt('Compact studio apartment essentials for a student on a budget')} className="text-[13px] bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-4 py-2.5 rounded-xl hover:bg-slate-900 dark:hover:bg-white hover:text-white dark:hover:text-slate-900 transition-all font-bold border border-slate-200/50 dark:border-slate-700 shadow-sm">🎓 Student Essentials</button>
+          <div className="mt-6 flex flex-wrap gap-3 items-center">
+            <span className="text-sm text-slate-500 font-bold uppercase tracking-wider">Try:</span>
+            <button onClick={() => setAiPrompt('Complete Work From Home setup under ₹1500')} className="text-sm bg-indigo-50 text-indigo-700 px-4 py-2 rounded-xl hover:bg-indigo-100 transition-colors font-medium border border-indigo-100">💻 WFH setup under ₹1500</button>
+            <button onClick={() => setAiPrompt('Student and budget under ₹1000 per month')} className="text-sm bg-indigo-50 text-indigo-700 px-4 py-2 rounded-xl hover:bg-indigo-100 transition-colors font-medium border border-indigo-100">🎓 Student budget</button>
+            <button onClick={() => setAiPrompt('Premium living room with smart TV and L-sofa')} className="text-sm bg-indigo-50 text-indigo-700 px-4 py-2 rounded-xl hover:bg-indigo-100 transition-colors font-medium border border-indigo-100">🛋️ Premium living room</button>
           </div>
 
           {isGenerating && (
-            <div className="mt-12 flex flex-col items-center justify-center p-12 bg-white/50 backdrop-blur-md rounded-[3rem] border border-white relative z-20 overflow-hidden">
-              <div className="absolute inset-0 bg-white/20 animate-pulse" />
-              <div className="w-16 h-16 border-4 border-slate-100 border-t-indigo-600 rounded-full animate-spin mb-6 relative z-10" />
-              <p className="text-slate-900 font-black text-xl relative z-10">Architecting your space...</p>
-              <p className="text-slate-500 mt-2 font-medium relative z-10 text-center">Optimizing inventory, matching styles, and calculating your exclusive discount.</p>
+            <div className="mt-10 flex flex-col items-center justify-center p-10 bg-slate-50 rounded-2xl border border-slate-100 animate-pulse">
+              <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-6" />
+              <p className="text-indigo-900 font-bold text-lg">Curating the perfect bundle...</p>
+              <p className="text-slate-500 mt-2">Analyzing thousands of catalog combinations for your space</p>
             </div>
           )}
         </div>
       </section>
 
-      {/* Embedded Bundle Result or Empty State */}
-      {(bundle || isGenerating) && (
-        <section id="generated-bundle" className="py-24 bg-slate-900 relative z-10 animate-in fade-in slide-in-from-bottom-10 duration-700">
-          <div className="max-w-6xl mx-auto px-6">
-            {!bundle && isGenerating ? (
-              <div className="text-center py-20">
-                <div className="w-20 h-20 border-4 border-white/10 border-t-white rounded-full animate-spin mx-auto mb-8" />
-                <h3 className="text-2xl font-black text-white">Finalizing your custom blueprint...</h3>
-              </div>
-            ) : bundle && bundle.items && bundle.items.length > 0 ? (
-              <div className="bg-slate-800/40 backdrop-blur-3xl rounded-[4rem] p-10 sm:p-20 text-white shadow-2xl relative overflow-hidden border border-white/5">
-                <div className="absolute -top-24 -right-24 w-96 h-96 bg-indigo-600/20 rounded-full blur-[120px]" />
-                
-                <div className="relative z-10">
-                  <div className="inline-flex items-center gap-2 bg-indigo-500/20 text-indigo-300 px-4 py-2 rounded-full text-[11px] font-black uppercase tracking-[0.2em] mb-8 border border-indigo-500/30">
-                    <ShieldCheck className="w-4 h-4" />
-                    <span>Exclusive Architect Selection</span>
-                  </div>
-                  
-                  <h3 className="text-5xl sm:text-6xl font-black mb-8 tracking-tighter leading-[0.9]">{bundle.bundleName}</h3>
-                  <p className="text-slate-300 text-xl mb-16 max-w-2xl leading-relaxed font-medium">✨ {bundle.message}</p>
+      {/* Embedded Bundle Result */}
+      {bundle && (
+        <section id="generated-bundle" className="py-16 bg-slate-50 animate-in fade-in duration-500 slide-in-from-bottom-10">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-slate-900 rounded-[3rem] p-10 sm:p-16 text-white shadow-2xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-16 opacity-10 text-9xl">✨</div>
+              <h3 className="text-4xl sm:text-5xl font-black mb-6 tracking-tight">{bundle.bundleName}</h3>
+              <p className="text-slate-300 text-xl mb-12 max-w-2xl leading-relaxed">{bundle.message}</p>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-                    {bundle.items.map((item: any, idx: number) => (
-                      <Link key={idx} href={`/products/${item._id || item.id}`} className="bg-white/5 backdrop-blur-xl rounded-3xl p-6 flex gap-6 items-center border border-white/10 hover:bg-white/10 transition-all duration-300 hover:scale-[1.02] group">
-                        <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-2xl border border-white/10 shrink-0">
-                          <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
-                        </div>
-                        <div className="overflow-hidden">
-                          <h4 className="font-bold text-sm line-clamp-1 mb-1 tracking-tight">{item.name}</h4>
-                          <p className="text-indigo-400 font-black text-sm">₹{item.monthlyRent}<span className="text-[10px] opacity-60 ml-1">/mo</span></p>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-
-                  <div className="flex flex-col md:flex-row items-center justify-between gap-10 bg-white shadow-2xl p-10 rounded-[3rem]">
-                    <div className="text-slate-900">
-                      <p className="text-slate-400 text-xs font-black uppercase tracking-[0.2em] mb-2 opacity-70">Total Package Rent</p>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-6xl font-black tracking-tighter">₹{bundle.totalMonthlyRent}</span>
-                        <span className="text-lg font-bold opacity-40">/mo</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                {bundle.items?.map((item: any, idx: number) => {
+                  const itemId = item._id || item.id;
+                  return (
+                    <Link key={idx} href={`/products/${itemId}`} className="bg-white/10 backdrop-blur-xl rounded-2xl p-5 flex gap-5 items-center border border-white/20 hover:bg-white/20 transition-all hover:scale-105 group">
+                      <img src={item.imageUrl} alt={item.name} className="w-20 h-20 rounded-xl object-cover shadow-inner group-hover:brightness-110" />
+                      <div>
+                        <h4 className="font-bold line-clamp-2 leading-tight mb-1 group-hover:text-slate-200 transition-colors uppercase tracking-tight text-xs">{item.name}</h4>
+                        <p className="text-slate-400 font-bold text-xs">₹{item.monthlyRent}<span className="opacity-70 ml-0.5">/mo</span></p>
                       </div>
-                    </div>
-                    <Button size="lg" className="h-20 px-16 rounded-3xl text-2xl font-black w-full md:w-auto shadow-[0_20px_50px_-10px_rgba(30,58,138,0.3)]" onClick={addBundleToCart}>
-                      Rent Setup Now
-                    </Button>
-                  </div>
-                  
-                  <div className="mt-10 flex flex-wrap justify-center md:justify-start gap-8 opacity-50">
-                    <div className="flex items-center gap-2 text-xs font-bold whitespace-nowrap"><Truck className="w-4 h-4" /> 24hr Fast Delivery</div>
-                    <div className="flex items-center gap-2 text-xs font-bold whitespace-nowrap"><RefreshCcw className="w-4 h-4" /> 7-Day Easy Returns</div>
-                    <div className="flex items-center gap-2 text-xs font-bold whitespace-nowrap"><ShieldCheck className="w-4 h-4" /> 100% Quality Insured</div>
-                  </div>
-                </div>
+                    </Link>
+                  );
+                })}
               </div>
-            ) : (
-              <div className="max-w-3xl mx-auto bg-slate-800/40 backdrop-blur-3xl rounded-[4rem] p-16 text-center border border-white/5">
-                <div className="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-8 border border-white/10">
-                  <PackageSearch className="w-12 h-12 text-slate-300" />
+
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-8 bg-white/5 p-8 rounded-[2.5rem] border border-white/10 backdrop-blur-md">
+                <div>
+                  <span className="text-slate-400 text-sm font-bold uppercase tracking-widest block mb-2">Total Monthly Rent</span>
+                  <span className="text-5xl font-black tracking-tighter text-white">₹{bundle.totalMonthlyRent}</span>
                 </div>
-                <h3 className="text-3xl font-black text-white mb-4">No Bundle Found</h3>
-                <p className="text-slate-400 text-lg font-medium leading-relaxed mb-10">
-                  Our Architect couldn't find a perfect combination matching those exact criteria in our current inventory. Try broadening your requirements or increasing your target budget slightly.
-                </p>
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                  <Button variant="outline" className="text-white border-white/20 hover:bg-white/10 rounded-2xl px-10 h-14" onClick={() => setAiPrompt('')}>
-                    Clear Strategy
-                  </Button>
-                  <Button className="rounded-2xl px-10 h-14" onClick={() => document.getElementById('ai-generator')?.scrollIntoView({ behavior: 'smooth' })}>
-                    Revise Description
-                  </Button>
-                </div>
+                <Button size="lg" className="h-16 px-12 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xl font-black w-full sm:w-auto shadow-2xl shadow-indigo-500/20 transition-all hover:scale-105 active:scale-95 border-0" onClick={addBundleToCart}>
+                  Rent Now
+                </Button>
               </div>
-            )}
+            </div>
           </div>
         </section>
       )}
 
       {/* Testimonials */}
-      <section className="py-24 bg-white dark:bg-slate-900 transition-colors">
+      <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl font-black text-slate-900 dark:text-white mb-16 tracking-tight">Voices of the Community</h2>
-          <div className="grid md:grid-cols-3 gap-10 text-left">
-            <div className="bg-slate-50 dark:bg-slate-950/50 p-10 rounded-[3rem] border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:-translate-y-2 transition-all">
-              <div className="absolute top-0 right-0 p-8 text-indigo-500/10 text-7xl font-serif">"</div>
-              <div className="flex text-yellow-400 mb-6 text-xl tracking-widest">★★★★★</div>
-              <p className="text-slate-700 dark:text-slate-300 font-medium mb-10 relative z-10 leading-relaxed text-lg italic">"Got my entire home office setup delivered the very next day. The AI Architect suggested exactly what I needed under ₹1500/month. No more hunting for used furniture!"</p>
-              <div className="flex items-center gap-4 mt-auto border-t border-slate-100 dark:border-slate-800 pt-8">
-                <img src="https://i.pravatar.cc/100?img=1" className="w-14 h-14 rounded-2xl ring-2 ring-white dark:ring-slate-800 shadow-xl" />
+          <h2 className="text-3xl font-black text-slate-900 mb-12 tracking-tight">Loved by thousands of renters</h2>
+          <div className="grid md:grid-cols-3 gap-8 text-left">
+            <div className="bg-slate-50 p-8 rounded-3xl animate-in slide-in-from-bottom-5 border border-slate-100 shadow-sm relative overflow-hidden group hover:-translate-y-1 transition-transform">
+              <div className="absolute top-0 right-0 p-6 text-indigo-500/10 text-6xl font-serif">"</div>
+              <div className="flex text-yellow-400 mb-4 text-xl tracking-widest">★★★★★</div>
+              <p className="text-slate-700 font-medium mb-8 relative z-10 leading-relaxed">"Got my entire home office setup delivered the very next day. The AI suggested exactly what I needed under ₹1500/month. So much better than hunting for used furniture!"</p>
+              <div className="flex items-center gap-4 mt-auto">
+                <img src="https://i.pravatar.cc/100?img=1" className="w-12 h-12 rounded-full ring-2 ring-white shadow-md grayscale opacity-90 group-hover:grayscale-0 transition-all" />
                 <div>
-                  <p className="font-black text-slate-900 dark:text-white text-base">Priya Sharma</p>
-                  <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">Senior Engineer</p>
+                  <p className="font-bold text-slate-900 text-sm">Priya S.</p>
+                  <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Software Engineer</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-slate-50 dark:bg-slate-950/50 p-10 rounded-[3rem] border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:-translate-y-2 transition-all flex flex-col justify-between">
+            <div className="bg-slate-50 p-8 rounded-3xl animate-in slide-in-from-bottom-5 delay-150 border border-slate-100 shadow-sm relative overflow-hidden group hover:-translate-y-1 transition-transform flex flex-col justify-between">
               <div>
-                <div className="absolute top-0 right-0 p-8 text-indigo-500/10 text-7xl font-serif">"</div>
-                <div className="flex text-yellow-400 mb-6 text-xl tracking-widest">★★★★★</div>
-                <p className="text-slate-700 dark:text-slate-300 font-medium mb-10 relative z-10 leading-relaxed text-lg italic">"The Master Bedroom Combo saved me 20% compared to renting items individually. The delivery team was incredibly professional and assembled the bed in record time."</p>
+                <div className="absolute top-0 right-0 p-6 text-indigo-500/10 text-6xl font-serif">"</div>
+                <div className="flex text-yellow-400 mb-4 text-xl tracking-widest">★★★★★</div>
+                <p className="text-slate-700 font-medium mb-8 relative z-10 leading-relaxed">"The Master Bedroom Combo saved me 20% compared to renting items individually. The delivery team was incredibly professional and assembled the bed in 10 minutes."</p>
               </div>
-              <div className="flex items-center gap-4 mt-auto border-t border-slate-100 dark:border-slate-800 pt-8">
-                <img src="https://i.pravatar.cc/100?img=2" className="w-14 h-14 rounded-2xl ring-2 ring-white dark:ring-slate-800 shadow-xl" />
+              <div className="flex items-center gap-4">
+                <img src="https://i.pravatar.cc/100?img=2" className="w-12 h-12 rounded-full ring-2 ring-white shadow-md grayscale opacity-90 group-hover:grayscale-0 transition-all" />
                 <div>
-                  <p className="font-black text-slate-900 dark:text-white text-base">Rahul Malhotra</p>
-                  <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">Product Lead</p>
+                  <p className="font-bold text-slate-900 text-sm">Rahul M.</p>
+                  <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Student & Creator</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-slate-50 dark:bg-slate-950/50 p-10 rounded-[3rem] border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:-translate-y-2 transition-all flex flex-col justify-between">
+            <div className="bg-slate-50 p-8 rounded-3xl animate-in slide-in-from-bottom-5 delay-300 border border-slate-100 shadow-sm relative overflow-hidden group hover:-translate-y-1 transition-transform flex flex-col justify-between">
               <div>
-                <div className="absolute top-0 right-0 p-8 text-indigo-500/10 text-7xl font-serif">"</div>
-                <div className="flex text-yellow-400 mb-6 text-xl tracking-widest">★★★★★</div>
-                <p className="text-slate-700 dark:text-slate-300 font-medium mb-10 relative z-10 leading-relaxed text-lg italic">"Zero deposit and free delivery is a game changer for urban professionals. Managing my subscriptions is just a single click. This is the absolute future of living."</p>
+                <div className="absolute top-0 right-0 p-6 text-indigo-500/10 text-6xl font-serif">"</div>
+                <div className="flex text-yellow-400 mb-4 text-xl tracking-widest">★★★★★</div>
+                <p className="text-slate-700 font-medium mb-8 relative z-10 leading-relaxed">"Zero deposit and free delivery is incredible. Returning my TV when I moved cities was just a single manual click in the dashboard. FlexiRent is the absolute future of living."</p>
               </div>
-              <div className="flex items-center gap-4 mt-auto border-t border-slate-100 dark:border-slate-800 pt-8">
-                <img src="https://i.pravatar.cc/100?img=3" className="w-14 h-14 rounded-2xl ring-2 ring-white dark:ring-slate-800 shadow-xl" />
+              <div className="flex items-center gap-4">
+                <img src="https://i.pravatar.cc/100?img=3" className="w-12 h-12 rounded-full ring-2 ring-white shadow-md grayscale opacity-90 group-hover:grayscale-0 transition-all" />
                 <div>
-                  <p className="font-black text-slate-900 dark:text-white text-base">Ananya Tiwari</p>
-                  <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">Creative Director</p>
+                  <p className="font-bold text-slate-900 text-sm">Ananya T.</p>
+                  <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Design Lead</p>
                 </div>
               </div>
             </div>

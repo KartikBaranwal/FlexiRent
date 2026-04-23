@@ -1,21 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: #fcfcfc;
   --foreground: #0f172a;
   --primary: #0f172a;
   --secondary: #64748b;
   --accent: #0f172a;
   --border: #e2e8f0;
-}
-
-.dark {
-  --background: #0f172a;
-  --foreground: #f8fafc;
-  --primary: #f8fafc;
-  --secondary: #94a3b8;
-  --accent: #ffffff;
-  --border: #1e293b;
 }
 
 @theme inline {
@@ -80,11 +71,12 @@
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: #f8fafc;
+  /* Subtle light gray with a hint of blue */
+  color: #0f172a;
+  /* Deep Slate for text */
   scroll-behavior: smooth;
   font-feature-settings: "cv02", "cv05", "cv11";
-  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Premium Utility Classes */

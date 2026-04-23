@@ -1,9 +1,8 @@
+"use client";
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/Button';
-import api from '@/lib/api';
-import { Mail, Lock, User, MapPin, CheckCircle2 } from 'lucide-react';
 
 export const AuthModal = () => {
   const { isAuthModalOpen, setAuthModalOpen, authModalMode, setAuthModalMode, setUser, clearCart, showToast, user: currentUser } = useAppContext();
@@ -49,13 +48,29 @@ export const AuthModal = () => {
     }
 
     try {
-      const endpoint = authModalMode === 'signup' ? '/api/auth/register' : '/api/auth/login';
-      const body: any = authModalMode === 'signup' 
-        ? { name, email, password, city, addressLine1, addressLine2, pincode } 
-        : { email, password };
+      const baseUrl = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/, '');
+      const endpoint = authModalMode === 'signup' ? `${baseUrl}/api/auth/register` : `${baseUrl}/api/auth/login`;
+      const body: any = authModalMode === 'signup' ? { name, email, password, city, addressLine1, addressLine2, pincode } : { email, password };
 
-      const res = await api.post(endpoint, body);
-      const data = res.data;
+      const res = await fetch(`${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      // Robust check for JSON contentType
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await res.text();
+        console.error("Non-JSON response received:", text);
+        throw new Error(`Server returned an invalid response (HTML). Please check if the backend URL (${baseUrl}) is correct and active.`);
+      }
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || 'Authentication failed');
+      }
 
       if (authModalMode === 'signup') {
         clearCart();
@@ -82,12 +97,9 @@ export const AuthModal = () => {
         if (data.user.role === 'admin') {
           router.push('/admin/dashboard');
         }
-      } else {
-        showToast("Account created successfully. Welcome to FlexiRent!");
       }
     } catch (err: any) {
-      const errorMsg = err.response?.data?.message || err.message || 'Authentication failed';
-      setError(errorMsg);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -107,14 +119,9 @@ export const AuthModal = () => {
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
 
-        <h2 className="text-3xl font-black text-slate-900 mb-2 text-center tracking-tight">
-          {authModalMode === 'login' ? 'Welcome Back' : 'Join FlexiRent'}
+        <h2 className="text-2xl font-black text-slate-900 mb-4 text-center tracking-tight">
+          {authModalMode === 'login' ? 'Sign In' : 'Sign Up'}
         </h2>
-        <p className="text-slate-500 text-center text-sm mb-8 px-4">
-          {authModalMode === 'login' 
-            ? 'Sign in to manage your rentals and curated spaces.' 
-            : 'Premium furniture and appliances on your own terms.'}
-        </p>
 
         {error && (
           <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-xl text-sm border border-red-100 font-medium">

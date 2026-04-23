@@ -80,11 +80,17 @@ export default function CartPage() {
       console.log("Razorpay Order Data:", razorpayOrder);
 
       if (!res || !res.ok || !razorpayOrder) {
-        throw new Error(
-          (razorpayOrder && razorpayOrder.error) 
-            ? razorpayOrder.error 
-            : `Failed to create payment order on server. Status: ${res ? res.status : 'Unknown'}`
-        );
+        let errorMessage = "Failed to create payment order on server.";
+        if (razorpayOrder && razorpayOrder.error) {
+          errorMessage = typeof razorpayOrder.error === 'string' ? razorpayOrder.error : JSON.stringify(razorpayOrder.error);
+        } else if (res) {
+          try {
+            errorMessage += ` Status: ${res.status}`;
+          } catch (e) {
+            errorMessage += ` Status: Unknown`;
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       // 2. Configure Razorpay Options
